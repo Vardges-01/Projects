@@ -1,0 +1,3 @@
+C++ IS A GeneraL-PurposE ProgramminG
+LanguagE CreateD BY BjarnS StroustruP AS AN ExtensioN 
+OF ThE C ProgramminG LanguagS, OR "C WitS ClasseS"    

@@ -1,0 +1,2 @@
+Person name>string age>int
+Gvidon age>string anun>int

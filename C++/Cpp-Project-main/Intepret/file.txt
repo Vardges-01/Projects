@@ -1,0 +1,20 @@
+tiv a ;
+a = 14 ;
+tiv b ;
+b = 11 ;
+
+ete [ a > b ]
+{
+    zarge -> | ha |  -> bacat ;
+}
+eteche
+{
+    zarge -> | che | -> bacat ;
+}
+
+qani [ a > b ]
+{
+    zarge -> | barev | -> bacat ; 
+    ++ b ;
+}
+
