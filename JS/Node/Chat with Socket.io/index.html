@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Chat UI Responsive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lato'>
+  <link rel="stylesheet" href="https://drive.google.com/uc?export=download&id=1jTyOh2zDEydB2TE18VAw9yEWcSHaRvpr">
+  <!-- <link rel="stylesheet" href="./style.css"> -->
+
+</head>
+
+<body>
+  <!-- partial:index.partial.html -->
+  <div class="--dark-theme" id="chat">
+    <div class="chat__conversation-board" id="chat_board"></div>
+    <form class="chat__conversation-panel__container" id="chat__conversation-panel__container">
+      <input class="chat__conversation-panel__input panel-item" id="input_text" placeholder="Type a message..." />
+      <button class="chat__conversation-panel__button panel-item btn-icon send-message-button" id="send_button" type="submit">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          data-reactid="1036">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </form>
+  </div>
+  <!-- partial -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const chat_board = document.getElementById("chat_board")
+
+    $(function () {
+      const socket = io.connect();
+      const send_button = document.getElementById("chat__conversation-panel__container")
+      const input_text = document.getElementById("input_text")
+      $("form").submit(function (e) {
+        if(input_text.value.length){
+        addMsg(input_text.value, true)
+        socket.emit("send msg",input_text.value)
+        input_text.value = ""
+        }
+        e.preventDefault();
+      });
+      
+      socket.on("add msg",(msg)=>{
+        addMsg(msg)
+      })
+    })
+
+    function addMsg(msg, user = false) {
+      let chat_container = document.createElement("div")
+      chat_container.className = user ? "chat__conversation-board__message-container reversed" : "chat__conversation-board__message-container"
+
+      let msg_board = document.createElement("div")
+      msg_board.className = "chat__conversation-board__message__person"
+
+      let user_avatar = document.createElement("div")
+      user_avatar.className = "chat__conversation-board__message__person__avatar"
+      var img = document.createElement('img');
+      img.src = 'https://shorturl.at/gPTW8';
+      user_avatar.appendChild(img)
+      msg_board.append(user_avatar)
+      chat_container.append(msg_board)
+
+      let chat_msg = document.createElement("div")
+      chat_msg.className = "message_text"
+      chat_container.append(chat_msg)
+
+      let msg_text = document.createElement("span")
+      msg_text.innerText = msg
+      chat_msg.append(msg_text)
+
+      chat_board.append(chat_container);
+    }
+  </script>
+</body>
+
+</html>
