@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from "./entities/user.entity";
 
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
@@ -21,9 +22,11 @@ import { UsersModule } from './users/users.module';
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,
             entities: [UserEntity], // TODO Postgres Connect
-            autoLoadEntities: true
+            autoLoadEntities: true,
+            synchronize: true
         }),
-        UsersModule
+        UsersModule,
+        AuthModule
     ]
 
 })

@@ -9,36 +9,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserEntity = void 0;
-const typeorm_1 = require("typeorm");
-let UserEntity = class UserEntity {
-};
+exports.CreateUserDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
+class CreateUserDto {
+}
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
-    __metadata("design:type", Number)
-], UserEntity.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, swagger_1.ApiProperty)({
+        type: String,
+        description: 'User Name',
+    }),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UserEntity.prototype, "name", void 0);
+], CreateUserDto.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true }),
+    (0, swagger_1.ApiProperty)({
+        type: String,
+        description: 'User Email',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], UserEntity.prototype, "email", void 0);
+], CreateUserDto.prototype, "email", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, swagger_1.ApiProperty)({
+        type: String,
+        description: 'User Password',
+    }),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UserEntity.prototype, "password", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
-    __metadata("design:type", Date)
-], UserEntity.prototype, "createdAt", void 0);
-__decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
-    __metadata("design:type", Date)
-], UserEntity.prototype, "updateAt", void 0);
-UserEntity = __decorate([
-    (0, typeorm_1.Entity)('users')
-], UserEntity);
-exports.UserEntity = UserEntity;
-//# sourceMappingURL=user.entity.js.map
+], CreateUserDto.prototype, "password", void 0);
+exports.CreateUserDto = CreateUserDto;
+//# sourceMappingURL=create-user.dto.js.map
