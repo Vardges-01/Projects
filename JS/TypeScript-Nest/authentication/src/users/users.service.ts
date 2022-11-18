@@ -15,7 +15,14 @@ export class UsersService {
     }
 
     async getAllUsers(): Promise<UserEntity[]> {
-        return await this.usersRepository.find();
+        return await this.usersRepository.find({
+            select: {
+                id: true,
+                name: true,
+                email: true
+            }
+        }
+        );
     }
 
     async getUserByEmail(email: string): Promise<UserEntity> {

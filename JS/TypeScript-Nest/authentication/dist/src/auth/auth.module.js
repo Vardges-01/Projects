@@ -19,13 +19,17 @@ AuthModule = __decorate([
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService],
         imports: [
-            users_module_1.UsersModule,
+            (0, common_1.forwardRef)(() => users_module_1.UsersModule),
             jwt_1.JwtModule.register({
                 secret: process.env.SECRET_KEY || "SECRET",
                 signOptions: {
-                    expiresIn: process.env.JWT_EXPIRE || "24"
+                    expiresIn: process.env.JWT_EXPIRE || "24h"
                 }
             })
+        ],
+        exports: [
+            auth_service_1.AuthService,
+            jwt_1.JwtModule
         ]
     })
 ], AuthModule);

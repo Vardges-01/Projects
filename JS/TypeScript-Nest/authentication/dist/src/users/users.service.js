@@ -26,7 +26,13 @@ let UsersService = class UsersService {
         return user;
     }
     async getAllUsers() {
-        return await this.usersRepository.find();
+        return await this.usersRepository.find({
+            select: {
+                id: true,
+                name: true,
+                email: true
+            }
+        });
     }
     async getUserByEmail(email) {
         return this.usersRepository.findOneBy({ email });
