@@ -23,8 +23,8 @@ let AuthController = class AuthController {
     login(userDto) {
         return this.authService.login(userDto);
     }
-    regostration(userDto) {
-        return this.authService.regostration(userDto);
+    registration(userDto) {
+        return this.authService.registration(userDto);
     }
 };
 __decorate([
@@ -40,7 +40,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", void 0)
-], AuthController.prototype, "regostration", null);
+], AuthController.prototype, "registration", null);
 AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

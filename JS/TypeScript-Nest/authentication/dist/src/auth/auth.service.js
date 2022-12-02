@@ -23,7 +23,7 @@ let AuthService = class AuthService {
         let user = await this.validateUser(userDto);
         return this.generateToken(user);
     }
-    async regostration(userDto) {
+    async registration(userDto) {
         const userData = await this.userService.getUserByEmail(userDto.email);
         if (userData) {
             throw new common_1.HttpException("User already exist", common_1.HttpStatus.BAD_REQUEST);

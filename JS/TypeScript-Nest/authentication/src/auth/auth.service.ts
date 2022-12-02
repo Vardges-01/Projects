@@ -17,23 +17,32 @@ export class AuthService {
         return this.generateToken(user);
     }
 
-    async regostration(userDto: CreateUserDto) {
+    async registration(userDto: CreateUserDto) {
         const userData = await this.userService.getUserByEmail(userDto.email);
 
-        if(userData){
+        if (userData) {
             throw new HttpException("User already exist", HttpStatus.BAD_REQUEST)
         }
 
         const hashPassword = await bcrypt.hash(userDto.password, 6);
-        const user = await this.userService.createUser({...userDto, password: hashPassword})
-        return this.generateToken(user);
+        const user = await this.userService.createUser({ ...userDto, password: hashPassword })
+
+        return {
+            accessToken: this.generateToken(user),
+            refreshToken: this.generateRefreshToken(),
+            user
+        } 
     }
 
     async generateToken(user: UserEntity){
         let payload = { id: user.id, name: user.name, email: user.email };
-        return {
-            accessToken: this.jwtService.sign(payload)
-        }
+        return  this.jwtService.sign(payload)
+        
+    }
+
+    async generateRefreshToken(){
+        // TODO
+        return "refreshToken"
     }
 
     private async validateUser(userDto: LoginUserDto) {

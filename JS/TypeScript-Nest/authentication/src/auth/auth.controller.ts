@@ -12,7 +12,7 @@ export class AuthController {
     }
 
     @Post("/registration")
-    regostration(@Body() userDto:CreateUserDto){
-        return this.authService.regostration(userDto);
+    registration(@Body() userDto:CreateUserDto){
+        return this.authService.registration(userDto);
     }
 }

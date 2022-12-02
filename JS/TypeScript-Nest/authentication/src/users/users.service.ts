@@ -11,7 +11,6 @@ export class UsersService {
     async createUser(dto: CreateUserDto): Promise<UserEntity> {
         let user = await this.usersRepository.save(dto);
         return user
-
     }
 
     async getAllUsers(): Promise<UserEntity[]> {

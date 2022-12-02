@@ -6,7 +6,7 @@ export declare class AuthController {
     login(userDto: CreateUserDto): Promise<{
         accessToken: string;
     }>;
-    regostration(userDto: CreateUserDto): Promise<{
+    registration(userDto: CreateUserDto): Promise<{
         accessToken: string;
     }>;
 }

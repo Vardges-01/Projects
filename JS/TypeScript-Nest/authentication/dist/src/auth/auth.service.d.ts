@@ -10,7 +10,7 @@ export declare class AuthService {
     login(userDto: LoginUserDto): Promise<{
         accessToken: string;
     }>;
-    regostration(userDto: CreateUserDto): Promise<{
+    registration(userDto: CreateUserDto): Promise<{
         accessToken: string;
     }>;
     generateToken(user: UserEntity): Promise<{
