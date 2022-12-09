@@ -1,20 +1,24 @@
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { UsersService } from 'src/users/users.service';
-import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from 'src/entities/user.entity';
-import { LoginUserDto } from 'src/users/dto/login-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { Repository } from 'typeorm';
+import { Tokens } from './types';
+import { JwtService } from '@nestjs/jwt';
 export declare class AuthService {
-    private userService;
+    private usersRepository;
     private jwtService;
-    constructor(userService: UsersService, jwtService: JwtService);
-    login(userDto: LoginUserDto): Promise<{
-        accessToken: string;
+    constructor(usersRepository: Repository<UserEntity>, jwtService: JwtService);
+    signup(dto: CreateUserDto): Promise<Tokens>;
+    signin(dto: LoginUserDto): Promise<Tokens>;
+    logout(userId: number): Promise<void>;
+    refreshTokens(userId: number, rt: string): Promise<{
+        access_token: string;
+        refresh_token: string;
     }>;
-    registration(userDto: CreateUserDto): Promise<{
-        accessToken: string;
+    updateRtHash(userId: number, rt: string): Promise<void>;
+    getTokens(userId: number, email: string): Promise<{
+        access_token: string;
+        refresh_token: string;
     }>;
-    generateToken(user: UserEntity): Promise<{
-        accessToken: string;
-    }>;
-    private validateUser;
+    hashData(data: string): Promise<string>;
 }

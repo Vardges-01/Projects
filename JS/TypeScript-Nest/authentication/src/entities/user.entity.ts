@@ -15,6 +15,9 @@ export class UserEntity {
   @Column({nullable:false})
   password: string
 
+  @Column({nullable:true})
+  hashRt: string
+
   @CreateDateColumn()
   createdAt:Date
 

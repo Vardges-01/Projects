@@ -3,13 +3,19 @@ import { ConfigModule } from "@nestjs/config";
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from "./entities/user.entity";
 
-import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from "@nestjs/core";
+import { AtGuard } from "./common/guards";
 
 
 @Module({
     controllers:[],
-    providers: [],
+    providers: [
+        {
+          provide: APP_GUARD,
+          useClass: AtGuard,
+        },
+      ],
     imports: [
         ConfigModule.forRoot({
             envFilePath: `config/.${process.env.NODE_ENV}.env`
@@ -25,7 +31,6 @@ import { AuthModule } from './auth/auth.module';
             autoLoadEntities: true,
             synchronize: true
         }),
-        UsersModule,
         AuthModule
     ]
 

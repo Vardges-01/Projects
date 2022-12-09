@@ -11,14 +11,20 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./entities/user.entity");
-const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
+const core_1 = require("@nestjs/core");
+const guards_1 = require("./common/guards");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
         controllers: [],
-        providers: [],
+        providers: [
+            {
+                provide: core_1.APP_GUARD,
+                useClass: guards_1.AtGuard,
+            },
+        ],
         imports: [
             config_1.ConfigModule.forRoot({
                 envFilePath: `config/.${process.env.NODE_ENV}.env`
@@ -34,7 +40,6 @@ AppModule = __decorate([
                 autoLoadEntities: true,
                 synchronize: true
             }),
-            users_module_1.UsersModule,
             auth_module_1.AuthModule
         ]
     })

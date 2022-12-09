@@ -3,6 +3,7 @@ export declare class UserEntity {
     name: string;
     email: string;
     password: string;
+    hashRt: string;
     createdAt: Date;
     updateAt: Date;
 }

@@ -8,48 +8,98 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-const users_service_1 = require("../users/users.service");
+const argon = require("argon2");
+const user_entity_1 = require("../entities/user.entity");
+const sequelize_1 = require("@nestjs/sequelize");
+const typeorm_1 = require("typeorm");
 const jwt_1 = require("@nestjs/jwt");
-const bcrypt = require("bcryptjs");
 let AuthService = class AuthService {
-    constructor(userService, jwtService) {
-        this.userService = userService;
+    constructor(usersRepository, jwtService) {
+        this.usersRepository = usersRepository;
         this.jwtService = jwtService;
     }
-    async login(userDto) {
-        let user = await this.validateUser(userDto);
-        return this.generateToken(user);
+    async signup(dto) {
+        const hashPassword = await this.hashData(dto.password);
+        const newUser = await this.usersRepository.save({
+            name: dto.name,
+            email: dto.email,
+            password: hashPassword
+        });
+        const tokens = await this.getTokens(newUser.id, newUser.email);
+        await this.updateRtHash(newUser.id, tokens.refresh_token);
+        return tokens;
     }
-    async registration(userDto) {
-        const userData = await this.userService.getUserByEmail(userDto.email);
-        if (userData) {
-            throw new common_1.HttpException("User already exist", common_1.HttpStatus.BAD_REQUEST);
-        }
-        const hashPassword = await bcrypt.hash(userDto.password, 6);
-        const user = await this.userService.createUser(Object.assign(Object.assign({}, userDto), { password: hashPassword }));
-        return this.generateToken(user);
+    async signin(dto) {
+        const user = await this.usersRepository.findOneBy({ email: dto.email });
+        if (!user)
+            throw new common_1.ForbiddenException("Access Denied");
+        const passwordMatches = await argon.verify(user.password, dto.password);
+        if (!passwordMatches)
+            throw new common_1.UnauthorizedException({ message: "Wrong Password" });
+        const tokens = await this.getTokens(user.id, user.email);
+        await this.updateRtHash(user.id, tokens.refresh_token);
+        return tokens;
     }
-    async generateToken(user) {
-        let payload = { id: user.id, name: user.name, email: user.email };
+    async logout(userId) {
+        await this.usersRepository.save({
+            id: userId,
+            hashRt: null
+        });
+    }
+    async refreshTokens(userId, rt) {
+        const user = await this.usersRepository.findOneBy({ id: userId });
+        if (!user || (user && !user.hashRt))
+            throw new common_1.ForbiddenException("Access Denied");
+        const rtMatches = await argon.verify(user.hashRt, rt);
+        if (!rtMatches)
+            throw new common_1.ForbiddenException("Access Denied");
+        const tokens = await this.getTokens(user.id, user.email);
+        await this.updateRtHash(user.id, tokens.refresh_token);
+        return tokens;
+    }
+    async updateRtHash(userId, rt) {
+        const hash = await this.hashData(rt);
+        await this.usersRepository.save({
+            id: userId,
+            hashRt: hash
+        });
+    }
+    async getTokens(userId, email) {
+        const [at, rt] = await Promise.all([
+            this.jwtService.signAsync({
+                id: userId,
+                email
+            }, {
+                secret: "AT_SECRET",
+                expiresIn: 60 * 15
+            }),
+            this.jwtService.signAsync({
+                id: userId,
+                email
+            }, {
+                secret: "RT_SECRET",
+                expiresIn: 60 * 60 * 24 * 7
+            })
+        ]);
         return {
-            accessToken: this.jwtService.sign(payload)
+            access_token: at,
+            refresh_token: rt,
         };
     }
-    async validateUser(userDto) {
-        const userData = await this.userService.getUserByEmail(userDto.email);
-        const passwordEquals = await bcrypt.compare(userDto.password, userData.password);
-        if (userData && passwordEquals) {
-            return userData;
-        }
-        throw new common_1.UnauthorizedException({ message: "Wrong Password" });
+    hashData(data) {
+        return argon.hash(data);
     }
 };
 AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [users_service_1.UsersService,
+    __param(0, (0, sequelize_1.InjectModel)(user_entity_1.UserEntity)),
+    __metadata("design:paramtypes", [typeorm_1.Repository,
         jwt_1.JwtService])
 ], AuthService);
 exports.AuthService = AuthService;
