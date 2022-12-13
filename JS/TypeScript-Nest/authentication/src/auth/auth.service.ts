@@ -1,6 +1,5 @@
-import { ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import * as bcrypt from 'bcryptjs'
 import * as argon from 'argon2';
 import { UserEntity } from 'src/entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -16,33 +15,47 @@ export class AuthService {
         private jwtService: JwtService) { }
 
     async signup(dto: CreateUserDto): Promise<Tokens> {
-        const hashPassword = await this.hashData(dto.password);
-        const newUser = await this.usersRepository.save({
-            name: dto.name,
-            email: dto.email,
-            password: hashPassword
-        })
+        try {
+            const user = await this.usersRepository.findOneBy({ email: dto.email });
 
-        const tokens = await this.getTokens(newUser.id, newUser.email);
-        await this.updateRtHash(newUser.id, tokens.refresh_token)
+            if (user) throw new ConflictException("Email already exist");
 
-        return tokens;
+            const hashPassword = await this.hashData(dto.password);
+            const newUser = await this.usersRepository.save({
+                name: dto.name,
+                email: dto.email,
+                password: hashPassword
+            })
+
+            const tokens = await this.getTokens(newUser.id, newUser.email);
+            await this.updateRtHash(newUser.id, tokens.refresh_token)
+
+            return tokens;
+
+        } catch (error) {
+            throw error
+        }
     }
 
     async signin(dto: LoginUserDto): Promise<Tokens> {
 
-        const user = await this.usersRepository.findOneBy({ email: dto.email });
-        
-        if (!user) throw new ForbiddenException("Access Denied");
+        try {
+            const user = await this.usersRepository.findOneBy({ email: dto.email });
 
-        const passwordMatches = await argon.verify(user.password, dto.password);
+            if (!user) throw new ForbiddenException("User Not Found");
 
-        if(!passwordMatches) throw new UnauthorizedException({ message: "Wrong Password" })
-        
-        const tokens = await this.getTokens(user.id, user.email);
-        await this.updateRtHash(user.id, tokens.refresh_token)
+            const passwordMatches = await argon.verify(user.password, dto.password);
 
-        return tokens;
+            if (!passwordMatches) throw new UnauthorizedException({ message: "Wrong Password" })
+
+            const tokens = await this.getTokens(user.id, user.email);
+            await this.updateRtHash(user.id, tokens.refresh_token)
+
+            return tokens;
+
+        } catch (error) {
+            throw error
+        }
     }
 
     async logout(userId: number) {
@@ -50,22 +63,27 @@ export class AuthService {
             id: userId,
             hashRt: null
         })
-     }
+    }
 
 
-    async refreshTokens(userId:number, rt:string) {
-        const user = await this.usersRepository.findOneBy({ id: userId });
+    async refreshTokens(userId: number, rt: string) {
+        try {
+            const user = await this.usersRepository.findOneBy({ id: userId });
 
-        if(!user || (user && !user.hashRt)) throw new ForbiddenException("Access Denied");
-        
-        const rtMatches = await argon.verify(user.hashRt, rt);
-        if(!rtMatches) throw new ForbiddenException("Access Denied");
+            if (!user || (user && !user.hashRt)) throw new ForbiddenException("Access Denied");
 
-        const tokens = await this.getTokens(user.id, user.email);
-        await this.updateRtHash(user.id, tokens.refresh_token)
+            const rtMatches = await argon.verify(user.hashRt, rt);
+            if (!rtMatches) throw new ForbiddenException("Access Denied");
 
-        return tokens;
-     }
+            const tokens = await this.getTokens(user.id, user.email);
+            await this.updateRtHash(user.id, tokens.refresh_token)
+
+            return tokens;
+
+        } catch (error) {
+            throw error
+        }
+    }
 
     async updateRtHash(userId: number, rt: string) {
         const hash = await this.hashData(rt);
@@ -74,32 +92,37 @@ export class AuthService {
             hashRt: hash
         })
     }
-    
+
     async getTokens(userId: number, email: string) {
-        const [at, rt] = await Promise.all([
-            this.jwtService.signAsync({
-                id: userId,
-                email
-            },
-                {
-                    secret: "AT_SECRET",
-                    expiresIn: 60 * 15
-                }
-            ),
+        try {
+            const [at, rt] = await Promise.all([
+                this.jwtService.signAsync({
+                    id: userId,
+                    email
+                },
+                    {
+                        secret: "AT_SECRET",
+                        expiresIn: 60 * 15
+                    }
+                ),
 
-            this.jwtService.signAsync({
-                id: userId,
-                email
-            },
-                {
-                    secret: "RT_SECRET",
-                    expiresIn: 60 * 60 * 24 * 7
-                })
-        ]);
+                this.jwtService.signAsync({
+                    id: userId,
+                    email
+                },
+                    {
+                        secret: "RT_SECRET",
+                        expiresIn: 60 * 60 * 24 * 7
+                    })
+            ]);
 
-        return {
-            access_token:at,
-            refresh_token:rt,
+            return {
+                access_token: at,
+                refresh_token: rt,
+            }
+
+        } catch (error) {
+            throw error
         }
     }
 

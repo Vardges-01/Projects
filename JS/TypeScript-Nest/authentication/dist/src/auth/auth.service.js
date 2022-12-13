@@ -25,26 +25,39 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async signup(dto) {
-        const hashPassword = await this.hashData(dto.password);
-        const newUser = await this.usersRepository.save({
-            name: dto.name,
-            email: dto.email,
-            password: hashPassword
-        });
-        const tokens = await this.getTokens(newUser.id, newUser.email);
-        await this.updateRtHash(newUser.id, tokens.refresh_token);
-        return tokens;
+        try {
+            const user = await this.usersRepository.findOneBy({ email: dto.email });
+            if (user)
+                throw new common_1.ConflictException("Email already exist");
+            const hashPassword = await this.hashData(dto.password);
+            const newUser = await this.usersRepository.save({
+                name: dto.name,
+                email: dto.email,
+                password: hashPassword
+            });
+            const tokens = await this.getTokens(newUser.id, newUser.email);
+            await this.updateRtHash(newUser.id, tokens.refresh_token);
+            return tokens;
+        }
+        catch (error) {
+            throw error;
+        }
     }
     async signin(dto) {
-        const user = await this.usersRepository.findOneBy({ email: dto.email });
-        if (!user)
-            throw new common_1.ForbiddenException("Access Denied");
-        const passwordMatches = await argon.verify(user.password, dto.password);
-        if (!passwordMatches)
-            throw new common_1.UnauthorizedException({ message: "Wrong Password" });
-        const tokens = await this.getTokens(user.id, user.email);
-        await this.updateRtHash(user.id, tokens.refresh_token);
-        return tokens;
+        try {
+            const user = await this.usersRepository.findOneBy({ email: dto.email });
+            if (!user)
+                throw new common_1.ForbiddenException("User Not Found");
+            const passwordMatches = await argon.verify(user.password, dto.password);
+            if (!passwordMatches)
+                throw new common_1.UnauthorizedException({ message: "Wrong Password" });
+            const tokens = await this.getTokens(user.id, user.email);
+            await this.updateRtHash(user.id, tokens.refresh_token);
+            return tokens;
+        }
+        catch (error) {
+            throw error;
+        }
     }
     async logout(userId) {
         await this.usersRepository.save({
@@ -53,15 +66,20 @@ let AuthService = class AuthService {
         });
     }
     async refreshTokens(userId, rt) {
-        const user = await this.usersRepository.findOneBy({ id: userId });
-        if (!user || (user && !user.hashRt))
-            throw new common_1.ForbiddenException("Access Denied");
-        const rtMatches = await argon.verify(user.hashRt, rt);
-        if (!rtMatches)
-            throw new common_1.ForbiddenException("Access Denied");
-        const tokens = await this.getTokens(user.id, user.email);
-        await this.updateRtHash(user.id, tokens.refresh_token);
-        return tokens;
+        try {
+            const user = await this.usersRepository.findOneBy({ id: userId });
+            if (!user || (user && !user.hashRt))
+                throw new common_1.ForbiddenException("Access Denied");
+            const rtMatches = await argon.verify(user.hashRt, rt);
+            if (!rtMatches)
+                throw new common_1.ForbiddenException("Access Denied");
+            const tokens = await this.getTokens(user.id, user.email);
+            await this.updateRtHash(user.id, tokens.refresh_token);
+            return tokens;
+        }
+        catch (error) {
+            throw error;
+        }
     }
     async updateRtHash(userId, rt) {
         const hash = await this.hashData(rt);
@@ -71,26 +89,31 @@ let AuthService = class AuthService {
         });
     }
     async getTokens(userId, email) {
-        const [at, rt] = await Promise.all([
-            this.jwtService.signAsync({
-                id: userId,
-                email
-            }, {
-                secret: "AT_SECRET",
-                expiresIn: 60 * 15
-            }),
-            this.jwtService.signAsync({
-                id: userId,
-                email
-            }, {
-                secret: "RT_SECRET",
-                expiresIn: 60 * 60 * 24 * 7
-            })
-        ]);
-        return {
-            access_token: at,
-            refresh_token: rt,
-        };
+        try {
+            const [at, rt] = await Promise.all([
+                this.jwtService.signAsync({
+                    id: userId,
+                    email
+                }, {
+                    secret: "AT_SECRET",
+                    expiresIn: 60 * 15
+                }),
+                this.jwtService.signAsync({
+                    id: userId,
+                    email
+                }, {
+                    secret: "RT_SECRET",
+                    expiresIn: 60 * 60 * 24 * 7
+                })
+            ]);
+            return {
+                access_token: at,
+                refresh_token: rt,
+            };
+        }
+        catch (error) {
+            throw error;
+        }
     }
     hashData(data) {
         return argon.hash(data);
